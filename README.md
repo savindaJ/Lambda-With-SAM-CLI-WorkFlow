@@ -1,20 +1,23 @@
 # lambda-test
 
-Two apps, **one API Gateway / one port** when run from the repo root.
+Simple serverless demo with **two Lambda apps** behind **one local API**.
+
+- **Auth service (Python)** — register, login, logout, refresh (JWT)
+- **Product service (TypeScript)** — create, get, list, update products
+
+No database. Data is stored in memory (clears when the Lambda restarts).  
+Login once, then call product APIs with the access token.
 
 | App | Runtime | Routes |
 |-----|---------|--------|
 | **auth-service** | Python 3.11 | `/auth/*` |
 | **product-service** | TypeScript | `/products/*` |
 
-No database — in-memory store (resets on cold start).
-
 ## Run both on a single port (recommended)
 
 Needs **Docker Desktop** running.
 
 ```bash
-cd /Users/savindajayasekara/My-Workzone/lambda-test
 
 # install product deps once
 cd product-service && npm install && cd ..
