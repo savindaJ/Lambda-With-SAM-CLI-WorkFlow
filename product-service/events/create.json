@@ -1,0 +1,6 @@
+{
+  "headers": {
+    "Authorization": "Bearer REPLACE_ACCESS_TOKEN"
+  },
+  "body": "{\"name\":\"Wireless Mouse\",\"description\":\"Ergonomic mouse\",\"price\":29.99,\"currency\":\"USD\"}"
+}

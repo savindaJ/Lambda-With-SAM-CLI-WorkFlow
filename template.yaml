@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Auth (Python) + Product (TypeScript) on one API Gateway / one port
+
+Parameters:
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    Default: dev-secret-change-me
+
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        JWT_SECRET: !Ref JwtSecret
+
+Resources:
+  AppApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.11
+      CodeUri: auth-service/src/
+      Handler: app.handler
+      Environment:
+        Variables:
+          ACCESS_TTL_SECONDS: "900"
+          REFRESH_TTL_SECONDS: "604800"
+      Events:
+        Register:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppApi
+            Path: /auth/register
+            Method: POST
+        Login:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppApi
+            Path: /auth/login
+            Method: POST
+        Logout:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppApi
+            Path: /auth/logout
+            Method: POST
+        Refresh:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppApi
+            Path: /auth/refresh
+            Method: POST
+    Metadata:
+      BuildMethod: python3.11
+
+  ProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs20.x
+      CodeUri: product-service/
+      Handler: index.handler
+      Events:
+        Create:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppApi
+            Path: /products
+            Method: POST
+        List:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppApi
+            Path: /products
+            Method: GET
+        Get:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppApi
+            Path: /products/{productId}
+            Method: GET
+        Update:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppApi
+            Path: /products/{productId}
+            Method: PUT
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/app.ts
+
+Outputs:
+  ApiUrl:
+    Description: Single API Gateway URL (auth + product)
+    Value: !Sub "https://${AppApi}.execute-api.${AWS::Region}.amazonaws.com/prod"

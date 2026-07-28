@@ -1,0 +1,9 @@
+{
+  "headers": {
+    "Authorization": "Bearer REPLACE_ACCESS_TOKEN"
+  },
+  "pathParameters": {
+    "productId": "REPLACE_PRODUCT_ID"
+  },
+  "body": "{\"name\":\"Wireless Mouse Pro\",\"price\":39.99}"
+}

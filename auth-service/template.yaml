@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Auth Service (Python) — in-memory store, no database
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 15
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    CodeUri: src/
+    Environment:
+      Variables:
+        JWT_SECRET: !Ref JwtSecret
+        ACCESS_TTL_SECONDS: "900"
+        REFRESH_TTL_SECONDS: "604800"
+
+Parameters:
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    Default: dev-secret-change-me
+    Description: Shared JWT secret (must match product-service JWT_SECRET)
+
+Resources:
+  AuthApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  # One Lambda so in-memory users/tokens are shared across all auth routes
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.handler
+      Events:
+        Register:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AuthApi
+            Path: /auth/register
+            Method: POST
+        Login:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AuthApi
+            Path: /auth/login
+            Method: POST
+        Logout:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AuthApi
+            Path: /auth/logout
+            Method: POST
+        Refresh:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AuthApi
+            Path: /auth/refresh
+            Method: POST
+    Metadata:
+      BuildMethod: python3.11
+
+Outputs:
+  AuthApiUrl:
+    Description: Auth API Gateway endpoint
+    Value: !Sub "https://${AuthApi}.execute-api.${AWS::Region}.amazonaws.com/prod"

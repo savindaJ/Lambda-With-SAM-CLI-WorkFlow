@@ -1,0 +1,8 @@
+{
+  "headers": {
+    "Authorization": "Bearer REPLACE_ACCESS_TOKEN"
+  },
+  "pathParameters": {
+    "productId": "REPLACE_PRODUCT_ID"
+  }
+}

@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Product Service (TypeScript) — in-memory store, no database
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 15
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    CodeUri: .
+    Environment:
+      Variables:
+        JWT_SECRET: !Ref JwtSecret
+
+Parameters:
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    Default: dev-secret-change-me
+    Description: Shared JWT secret (must match auth-service JWT_SECRET)
+
+Resources:
+  ProductApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  # One Lambda so in-memory products are shared across all product routes
+  ProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Events:
+        Create:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductApi
+            Path: /products
+            Method: POST
+        List:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductApi
+            Path: /products
+            Method: GET
+        Get:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductApi
+            Path: /products/{productId}
+            Method: GET
+        Update:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductApi
+            Path: /products/{productId}
+            Method: PUT
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/app.ts
+
+Outputs:
+  ProductApiUrl:
+    Description: Product API Gateway endpoint
+    Value: !Sub "https://${ProductApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
