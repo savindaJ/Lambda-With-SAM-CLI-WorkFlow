@@ -1,4 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyHandler } from "aws-lambda";
+// you can use for the auth with jwt token. use ApiGatewayProxyEventV2AuthorizerEventJWT
+// sample import
+// import { ApiGatewayProxyEventV2AuthorizerEventJWT } from "aws-lambda";
 import { requireAuth } from "../shared/auth";
 import { getProduct } from "../shared/db";
 import { error, HttpError, ok } from "../shared/response";

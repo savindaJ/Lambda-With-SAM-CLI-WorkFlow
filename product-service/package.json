@@ -1,14 +1,14 @@
 {
   "name": "product-service",
   "version": "1.0.0",
-  "description": "Product Service (TypeScript) — in-memory, no database",
+  "description": "Product Service (TypeScript) \u2014 in-memory, no database",
   "private": true,
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "PATH=\"$PWD/node_modules/.bin:$PATH\" sam build"
+    "build": "node init && PATH=\"$PWD/node_modules/.bin:$PATH\" sam build"
   },
   "dependencies": {
     "jsonwebtoken": "^9.0.2",
